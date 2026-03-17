@@ -1,0 +1,138 @@
+/* CSS Reset & Design Tokens (Bootstrap Complementary) */
+:root {
+    --bg-color: #0d1117;
+    --card-bg: rgba(22, 27, 34, 0.8);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --accent-primary: #38bdf8;
+    --accent-secondary: #818cf8;
+    --text-main: #f0f6fc;
+    --text-muted: #8b949e;
+    --glass-blur: blur(16px);
+    --transition: all 0.25s ease-in-out;
+    --radius-lg: 1.25rem;
+    --radius-md: 0.75rem;
+}
+
+body {
+    background: linear-gradient(rgba(13, 17, 23, 0.8), rgba(13, 17, 23, 0.8)), url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=2070');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--text-main) !important;
+    font-family: 'Inter', sans-serif !important;
+    min-height: 100vh;
+}
+
+/* Custom Overrides for Bootstrap Components */
+.card {
+    background: var(--card-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    transition: var(--transition) !important;
+}
+
+.btn-primary {
+    background-color: var(--accent-primary) !important;
+    border: none !important;
+    color: #0d1117 !important;
+}
+
+.btn-info {
+    background-color: #38bdf8 !important;
+    border: none !important;
+    color: #0d1117 !important;
+}
+
+.btn-outline-info {
+    border-color: var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
+}
+
+.btn-outline-info:hover {
+    background-color: var(--accent-primary) !important;
+    color: #0d1117 !important;
+}
+
+.badge.bg-info {
+    background-color: #38bdf8 !important;
+    color: #0d1117 !important;
+}
+
+/* Three.js Scene Viewport */
+#threejs-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    cursor: crosshair;
+}
+
+#status-label {
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
+}
+
+/* Notification Items (Architect dashboard) */
+.notification-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification-item span {
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Camera Simulation Overlay */
+#camera-stream-container {
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+}
+
+.scanner-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #38bdf8;
+    box-shadow: 0 0 15px #38bdf8;
+    animation: scan 2.5s infinite linear;
+}
+
+@keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(150px); }
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arc-3D | Client Login</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <style>
+        body {
+            /* Professional Architectural Interior Background */
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                        url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=2070') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .glass-card {
+            /* High-end Glassmorphism UI */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 50px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+        }
+
+        .logo-section {
+            margin-bottom: 35px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(56, 189, 248, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.25rem;
+            letter-spacing: -0.04em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-weight: 300;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 40px;
+        }
+
+        .form-label {
+            display: block;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .access-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            width: 100%;
+            color: #fff;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+            outline: none;
+        }
+
+        .access-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); /* Glow effect */
+        }
+
+        .access-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-view-model {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            border-radius: 12px;
+            padding: 15px 30px;
+            width: 100%;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+        }
+
+        .btn-view-model:hover {
+            background: rgba(56, 189, 248, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </div>
+            <h1>Access Your Project</h1>
+            <p class="subtitle">Secure architectural visualization for clients.</p>
+        </div>
+
+        <form id="access-form">
+            <label for="access_code" class="form-label">Unique Project Code</label>
+            <input type="text" id="access_code" class="access-input" placeholder="e.g., PROJ-91" required autofocus />
+            <button type="submit" class="btn-view-model">View 3D Model</button>
+        </form>
+
+        <a href="/" class="back-link">← Return to Home Portal</a>
+        
+        <div class="mt-4 pt-3 border-top border-white border-opacity-10 opacity-30 small">
+            © 2026 Arc-3D Prototyping | Immersive Design Studio
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('access-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const code = document.getElementById('access_code').value.trim().toUpperCase();
+            if (code) {
+                window.location.href = `/client/view/${code}`;
+            }
+        });
+    </script>
+</body>
+</html>

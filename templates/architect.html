@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arc-3D | Architect Dashboard</title>
+    <meta name="description" content="Arc-3D Architect Dashboard — upload a floor plan, enter a style prompt, and generate a high-quality 3D model with Three.js PBR rendering.">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Three.js Import Map -->
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.156.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.156.1/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        body { background: #010409; font-family: 'Inter', sans-serif; }
+        .panel-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+        .plan-preview-box {
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(56,189,248,0.3);
+            border-radius: 10px;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .plan-preview-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+        #style-prompt-input {
+            background: rgba(0,0,0,0.4) !important;
+            border: 1px solid rgba(56,189,248,0.3) !important;
+            color: #f8fafc !important;
+            border-radius: 8px;
+            resize: none;
+            transition: border-color 0.2s;
+        }
+        #style-prompt-input:focus {
+            border-color: rgba(56,189,248,0.8) !important;
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.15) !important;
+        }
+        #generate-3d-btn {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            border: none;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        #generate-3d-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        #generate-3d-btn:disabled { opacity: 0.5; }
+        .style-chip {
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid rgba(56,189,248,0.4);
+            color: #7dd3fc;
+            background: transparent;
+            transition: background 0.15s, color 0.15s;
+        }
+        .style-chip:hover { background: rgba(56,189,248,0.15); color: #e0f2fe; }
+        .scanner-line {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 2px; background: rgba(56,189,248,0.7);
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan { 0%{bottom:0%} 50%{bottom:100%} 100%{bottom:0%} }
+        .hidden { display: none !important; }
+        .badge-glow { box-shadow: 0 0 10px rgba(56,189,248,0.4); }
+    </style>
+</head>
+<body class="text-white">
+    <div class="container-fluid p-3 p-lg-4">
+
+        <!-- Dashboard Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom:1px solid rgba(255,255,255,0.1)">
+            <h1 class="h4 fw-bold mb-0">
+                <span class="text-info">Arc-3D</span>
+                <span class="text-white-50 fw-normal"> | Architect Dashboard</span>
+            </h1>
+            <a href="/client" class="btn btn-outline-info btn-sm">Client View</a>
+        </header>
+
+        <div class="row g-3">
+
+            <!-- ═══════════════════════════════════════════
+                 LEFT PANEL
+            ════════════════════════════════════════════ -->
+            <div class="col-lg-3 d-flex flex-column gap-3">
+
+                <!-- Step 1: Input Method -->
+                <div class="panel-card p-3">
+                    <h6 class="fw-semibold text-info mb-3" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:.05em">
+                        Step 1 › Input Method
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <button id="start-camera-btn" class="btn btn-primary btn-sm d-flex align-items-center justify-content-center gap-2">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Scan via Camera
+                        </button>
+                        <div class="text-center text-muted" style="font-size:0.75rem">— or —</div>
+                        <label for="file-upload" class="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center gap-2 mb-0" style="cursor:pointer">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            Upload PDF / Image
+                        </label>
+                        <input type="file" id="file-upload" hidden accept=".pdf,.png,.jpg,.jpeg">
+                    </div>
+
+                    <!-- Parse Progress Bar -->
+                    <div id="parse-progress" class="hidden mt-3">
+                        <div class="d-flex justify-content-between mb-1" style="font-size:0.73rem">
+                            <span class="text-muted">Parsing floor plan…</span>
+                            <span class="text-info">AI CV</span>
+                        </div>
+                        <div class="progress" style="height:5px;border-radius:4px;background:rgba(255,255,255,0.06)">
+                            <div class="progress-bar bg-info progress-bar-animated progress-bar-striped" style="width:0%;transition:width 0.5s"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2D Plan Preview -->
+                    <div class="mt-3">
+                        <div class="text-muted mb-1" style="font-size:0.73rem;text-transform:uppercase;letter-spacing:.04em">2D Plan Preview</div>
+                        <div class="plan-preview-box">
+                            <img id="plan-preview-img" class="hidden" alt="Plan preview">
+                            <span id="plan-preview-placeholder" class="text-muted small">Upload a plan to preview</span>
+                        </div>
+                    </div>
+
+                    <!-- Camera stream overlay -->
+                    <div id="camera-stream-container" class="hidden mt-2 rounded border border-info overflow-hidden" style="width:100%;aspect-ratio:4/3;position:relative">
+                        <video id="camera-video" autoplay playsinline class="w-100 h-100" style="object-fit:cover"></video>
+                        <div class="scanner-line"></div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Style Prompt & Generate -->
+                <div class="panel-card p-3">
+                    <h6 class="fw-semibold text-info mb-1" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:.05em">
+                        Step 2 › Style Prompt
+                    </h6>
+                    <p class="text-muted mb-2" style="font-size:0.75rem">Describe the design aesthetic. The 3D scene generates only after you submit a prompt.</p>
+
+                    <!-- Quick style chips -->
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <button class="style-chip" onclick="setPrompt('Modern style with glass and steel')">Modern</button>
+                        <button class="style-chip" onclick="setPrompt('Warm wooden floors and cosy interiors')">Wood</button>
+                        <button class="style-chip" onclick="setPrompt('Luxury marble finish with gold accents')">Luxury</button>
+                        <button class="style-chip" onclick="setPrompt('Minimalist white walls and open space')">Minimal</button>
+                    </div>
+
+                    <textarea id="style-prompt-input" class="form-control mb-3" rows="3"
+                        placeholder="e.g. Modern style with wooden floors and large windows…"></textarea>
+
+                    <button id="generate-3d-btn" class="btn btn-primary w-100 fw-semibold d-flex align-items-center justify-content-center gap-2" disabled>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Generate 3D Model
+                    </button>
+
+                    <!-- AI Result -->
+                    <div id="ai-status-msg" class="hidden mt-3 p-2 rounded" style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2)">
+                        <div class="text-info" style="font-size:0.73rem;font-weight:600">AI Pipeline:</div>
+                        <div id="ai-result-text" class="text-white-50" style="font-size:0.75rem">Processing…</div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Project Code -->
+                <div class="panel-card p-3">
+                    <h6 class="fw-semibold text-info mb-2" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:.05em">
+                        Step 3 › Share with Client
+                    </h6>
+                    <button id="generate-code-btn" class="btn btn-success btn-sm w-100 fw-bold" disabled>Generate PROJ-XX Code</button>
+                    <div id="access-code-display" class="hidden mt-3 text-center p-2 rounded" style="background:rgba(0,0,0,0.3);border:1px solid rgba(56,189,248,0.3)">
+                        <div class="text-muted mb-1" style="font-size:0.73rem">Access Code</div>
+                        <div id="result-code" class="h4 text-info fw-bold mb-0">----</div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="panel-card p-3 flex-grow-1">
+                    <h6 class="fw-semibold text-info mb-2" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:.05em">
+                        Client Feedback
+                    </h6>
+                    <div id="notification-panel" class="overflow-auto" style="max-height:150px">
+                        <p class="text-muted text-center py-3 small">No feedback yet…</p>
+                    </div>
+                </div>
+
+            </div><!-- /col-3 -->
+
+            <!-- ═══════════════════════════════════════════
+                 RIGHT PANEL: 3D Viewport
+            ════════════════════════════════════════════ -->
+            <div class="col-lg-9">
+                <div id="threejs-container" class="rounded overflow-hidden position-relative"
+                     style="height:calc(100vh - 100px);min-height:500px;background:#010409;border:1px solid rgba(255,255,255,0.08);">
+
+                    <!-- Status Badge -->
+                    <div class="position-absolute top-0 start-0 m-3 z-3">
+                        <span id="status-label" class="badge rounded-pill bg-info text-dark px-3 py-2 badge-glow" style="font-size:0.78rem">
+                            Status: Ready to load plan
+                        </span>
+                    </div>
+
+                    <!-- Hint overlay (disappears once scene is built) -->
+                    <div id="scene-hint" class="position-absolute top-50 start-50 translate-middle text-center z-2 pe-none" style="pointer-events:none">
+                        <div style="font-size:2.5rem;opacity:0.12">🏗</div>
+                        <div class="text-white-50 small mt-1">Upload a floor plan & enter a style prompt<br>to generate your 3D model</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /row -->
+    </div><!-- /container -->
+
+    <!-- Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="ai-toast" class="toast bg-dark text-white border-info" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-dark text-white border-bottom border-secondary">
+                <span class="me-1">✦</span>
+                <strong class="me-auto text-info">Arc-3D</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message">Ready.</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.VIEW_TYPE = 'architect';
+
+        // Quick style chip helper
+        function setPrompt(text) {
+            const el = document.getElementById('style-prompt-input');
+            if (el) el.value = text;
+        }
+
+        // Hide hint once generation starts
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('generate-3d-btn');
+            const hint = document.getElementById('scene-hint');
+            btn?.addEventListener('click', () => {
+                if (hint) hint.style.display = 'none';
+            });
+
+            // Show plan preview placeholder state
+            const img = document.getElementById('plan-preview-img');
+            const placeholder = document.getElementById('plan-preview-placeholder');
+            img?.addEventListener('load', () => {
+                if (placeholder) placeholder.style.display = 'none';
+            });
+        });
+    </script>
+    <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

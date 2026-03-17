@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arc-3D | Client View Model</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.156.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.156.1/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body class="text-white">
+    <div class="container-fluid p-4">
+        <!-- Client View Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+            <h1 class="h3 fw-bold mb-0">
+                <span class="text-info">Arc-3D</span> Client Model Viewer
+            </h1>
+            <div class="d-flex gap-2">
+                <span class="badge bg-secondary rounded-pill px-3 py-2 border border-info">Project Code: {{ access_code }}</span>
+                <a href="/client" class="btn btn-outline-secondary btn-sm">Exit Viewer</a>
+            </div>
+        </header>
+
+        <div class="row g-4">
+            <!-- Left: 3D Scene Viewport (Large) -->
+            <div class="col-12 col-lg-9">
+                <div id="threejs-container" class="rounded-4 border border-secondary shadow-lg overflow-hidden position-relative" style="height: 65vh; min-height: 500px; background: #010409;">
+                    <div class="position-absolute top-0 start-0 m-3 z-3">
+                        <span id="status-label" class="badge bg-dark border border-secondary px-3 py-2 d-flex align-items-center gap-2">
+                            <span class="spinner-grow spinner-grow-sm text-info shadow" role="status"></span>
+                            Loading Shared Environment...
+                        </span>
+                    </div>
+                    <div class="position-absolute top-0 end-0 m-3 z-3">
+                        <button id="toggle-furniture-btn" class="btn btn-sm btn-outline-info shadow fw-bold bg-dark text-white">Show Interior/Furniture</button>
+                    </div>
+                    <!-- Three.js will inject canvas here -->
+                </div>
+            </div>
+
+            <!-- Right: Feedback & Info Panel -->
+            <div class="col-12 col-lg-3">
+                <div class="card bg-secondary bg-opacity-10 border-secondary text-white mb-4 shadow">
+                    <div class="card-body">
+                        <h5 class="card-title fw-semibold mb-3">Project Details</h5>
+                        <ul class="list-group list-group-flush small bg-transparent">
+                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary px-0">
+                                <span class="text-muted">ID:</span>
+                                <strong>{{ access_code }}</strong>
+                            </li>
+                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary px-0">
+                                <span class="text-muted">Type:</span>
+                                <strong>3D Model</strong>
+                            </li>
+                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary px-0">
+                                <span class="text-muted">Status:</span>
+                                <span class="text-success fw-bold">Active</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card bg-secondary bg-opacity-10 border-info border-opacity-50 text-white shadow">
+                    <div class="card-body">
+                        <h5 class="card-title fw-semibold mb-1">Architect Feedback</h5>
+                        <p class="small text-muted mb-3">Send your comments directly to the dashboard.</p>
+                        
+                        <div class="mb-3">
+                            <textarea id="feedback-input" class="form-control bg-dark text-white border-secondary shadow-none px-3 py-2 mb-2" rows="5" placeholder="e.g., Change wall color to red, make the roof larger..."></textarea>
+                            <button id="send-feedback-btn" class="btn btn-info w-100 py-3 fw-bold rounded-3">Submit Comment</button>
+                            <div id="feedback-status" class="alert alert-success mt-3 mb-0 p-2 text-center hidden">
+                                Sent! Architect notified.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/static/js/main.js"></script>
+    <script>
+        window.VIEW_TYPE = 'client';
+        window.PROJECT_CODE = '{{ access_code }}';
+    </script>
+</body>
+</html>
