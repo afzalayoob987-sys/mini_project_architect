@@ -30,42 +30,61 @@ def parse_floor_plan(image_path: str) -> dict:
         return _fallback_plan()
 
     h, w = img.shape[:2]
-    scale = 20.0  # pixels → metre scale (20 px ≈ 1 m in the 3-D scene)
+    
+    # ── Parameters ──────────────────────────────────────────────────────────
+    PIXELS_TO_METRE = 20.0  # Senior Architect explicit scale
+    scale = PIXELS_TO_METRE # Target "Black Pixel Lines" specifically (Senior Architect Refinement)
 
     # ── 1. Pre-process ────────────────────────────────────────────────────────
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Try to binarise ─ works on both white-bg and dark-bg plans
-    _, thresh_inv = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY_INV)
-    _, thresh_otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # Strictly target black pixel lines: 
+    # Use adaptive thresholding or simple thresholding with a low value
+    _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)
 
-    # Pick whichever has more non-zero pixels (i.e. detects more structure)
-    binary = thresh_inv if cv2.countNonZero(thresh_inv) > cv2.countNonZero(thresh_otsu) else thresh_otsu
-
-    # Morphological cleanup
+    # Morphological cleanup to join small gaps in black lines
     kernel = np.ones((3, 3), np.uint8)
-    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=1)
+    
+    # Optional: Skeletonization to get 1-pixel thin lines for precise coordinates
+    # For now, we'll use probabilistic Hough Transform for better line detection
+    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+    # Combine edges with our black-line binary mask
+    combined = cv2.bitwise_and(edges, binary)
 
-    # ── 2. Edge detection → wall segments ────────────────────────────────────
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    edges = cv2.Canny(blurred, 50, 150, apertureSize=3)
-
-    # Hough line segments for walls
-    lines_raw = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=40,
-                             minLineLength=int(min(h, w) * 0.05),
-                             maxLineGap=10)
-    lines: list = list(lines_raw) if lines_raw is not None else []
-
+    # ── 2. Line detection → wall segments ────────────────────────────────────
+    # High-precision line detection using Probabilistic Hough Transform
+    hough_lines = cv2.HoughLinesP(combined, 1, np.pi/180, threshold=50, minLineLength=30, maxLineGap=15)
+    
     walls: list = []
-    if lines:
-        for line in lines[:80]:  # type: ignore[index]  # cap at 80 wall segments
+    if hough_lines is not None:
+        for line in hough_lines:
             x1, y1, x2, y2 = line[0]
-            # Convert to scene units (centre image at origin)
-            wx1 = (x1 - w / 2) / scale
-            wz1 = (y1 - h / 2) / scale
-            wx2 = (x2 - w / 2) / scale
-            wz2 = (y2 - h / 2) / scale
-            walls.append([round(wx1, 2), round(wz1, 2), round(wx2, 2), round(wz2, 2)])
+            
+            # Normalize and scale to scene units
+            # We provide a flat array [x1, y1, x2, y2] scaled to meters
+            wx1 = round((x1 - w / 2) / scale, 2)
+            wz1 = round((y1 - h / 2) / scale, 2)
+            wx2 = round((x2 - w / 2) / scale, 2)
+            wz2 = round((y2 - h / 2) / scale, 2)
+            
+            walls.append([wx1, wz1, wx2, wz2])
+    else:
+        # Fallback logic remains if needed, but refined to flat array
+        contours_wall, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        if contours_wall:
+            for cnt in contours_wall:
+                perimeter = cv2.arcLength(cnt, True)
+                if perimeter < 20: continue
+                approx = cv2.approxPolyDP(cnt, 0.005 * perimeter, True)
+                for i in range(len(approx)):
+                    p1 = approx[i][0]
+                    p2 = approx[(i+1) % len(approx)][0]
+                    wx1 = round((p1[0] - w / 2) / scale, 2)
+                    wz1 = round((p1[1] - h / 2) / scale, 2)
+                    wx2 = round((p2[0] - w / 2) / scale, 2)
+                    wz2 = round((p2[1] - h / 2) / scale, 2)
+                    walls.append([wx1, wz1, wx2, wz2])
 
     # ── 3. Room detection via contours ───────────────────────────────────────
     contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -116,7 +135,9 @@ def parse_floor_plan(image_path: str) -> dict:
         "rooms": rooms,
         "walls": walls,
         "outer_bounds": {"w": outer_w, "d": outer_d},
-        "room_count": len(rooms)
+        "room_count": len(rooms),
+        "image_size": {"w": w, "h": h},
+        "PIXELS_TO_METRE": PIXELS_TO_METRE
     }
 
 
@@ -147,12 +168,12 @@ def _fallback_plan() -> dict:
             {"type": "Bathroom",    "x":  2.5, "z":  2.5, "w": 4.0, "d": 3.0},
         ],
         "walls": [
-            [-5.0, -4.0,  5.0, -4.0],  # top
-            [ 5.0, -4.0,  5.0,  4.0],  # right
-            [ 5.0,  4.0, -5.0,  4.0],  # bottom
-            [-5.0,  4.0, -5.0, -4.0],  # left
-            [ 0.0, -4.0,  0.0,  4.0],  # centre vertical
-            [-5.0,  0.5,  5.0,  0.5],  # centre horizontal
+            {"start": {"x": -5.0, "z": -4.0}, "end": {"x": 5.0, "z": -4.0}, "thickness": 0.25, "height": 3.2},
+            {"start": {"x": 5.0, "z": -4.0}, "end": {"x": 5.0, "z": 4.0}, "thickness": 0.25, "height": 3.2},
+            {"start": {"x": 5.0, "z": 4.0}, "end": {"x": -5.0, "z": 4.0}, "thickness": 0.25, "height": 3.2},
+            {"start": {"x": -5.0, "z": 4.0}, "end": {"x": -5.0, "z": -4.0}, "thickness": 0.25, "height": 3.2},
+            {"start": {"x": 0.0, "z": -4.0}, "end": {"x": 0.0, "z": 4.0}, "thickness": 0.15, "height": 3.2},
+            {"start": {"x": -5.0, "z": 0.5}, "end": {"x": 5.0, "z": 0.5}, "thickness": 0.15, "height": 3.2},
         ],
         "outer_bounds": {"w": 10.0, "d": 8.0},
         "room_count": 4
